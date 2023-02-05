@@ -1,0 +1,65 @@
+#!/bin/bash
+
+show_help() {
+  echo ""
+  echo "Usage: $0 [-u username] [-p password] [-g groupname]"
+  echo ""
+  echo "Options:"
+  echo "  -u username   Specify the username for the new user. Required if not set in .env file."
+  echo "  -p password   Specify the password for the new user. Required if not set in .env file."
+  echo "  -g groupname  Specify the groupname for the new user. Read from .env file if not set."
+  echo ""
+  echo "The username, password, and groupname can also be set in a .env file in the server_configuration directory."
+  echo "The format of the .env file should be as follows:"
+  echo ""
+  echo "  USERNAME=my_username"
+  echo "  PASSWORD=my_password"
+  echo "  GROUPNAME=my_groupname"
+  echo ""
+}
+
+# Check if the script was executed with -u and -p options
+if [ "$1" == "-u" ] && [ "$3" == "-p" ]; then
+  # Shift the arguments to the left and get the username and password
+  username="$2"
+  password="$4"
+  groupname="$6"
+else
+  # Check if the help option was provided
+  if [ "$1" == "--help" ]; then
+    show_help
+    exit 0
+  fi
+
+  # Read the username, password, and groupname from the .env file
+  env_file="$HOME/server_config/.env"
+  if [ ! -f "$env_file" ]; then
+    echo "Error: $env_file not found"
+    exit 1
+  fi
+  source "$env_file"
+  username="$USERNAME"
+  password="$PASSWORD"
+  groupname="$GROUPNAME"
+fi
+
+# Check if the username and password were provided
+if [ -z "$username" ] || [ -z "$password" ]; then
+  echo "Error: Missing username or password"
+  exit 1
+fi
+
+# Create a new user with the provided username
+useradd -m -s /bin/bash "$username"
+
+# Set the provided password for the new user
+echo "$username:$password" | chpasswd
+
+# Check if a groupname was provided
+if [ -n "$groupname" ]; then
+  # Add the new user to the provided group
+  usermod -aG "$groupname" "$username"
+  echo "User successfully created with password and added to the '$groupname' group"
+else
+  echo "User successfully created with password"
+fi
