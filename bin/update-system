@@ -1,0 +1,42 @@
+#!/bin/bash
+
+show_help() {
+    echo ""
+    echo "This script updates an Ubuntu server by updating package information, upgrading installed packages, performing a dist-upgrade, removing unused packages, and cleaning up the package cache."
+    echo ""
+    echo "Usage: $0 [options]"
+    echo ""
+    echo "Options:"
+    echo "  -h, --help      Show this help message and exit"
+    echo ""
+}
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            show_help
+            exit 1
+            ;;
+    esac
+    shift
+done
+
+# Update package information
+apt-get update
+
+# Upgrade installed packages
+apt-get upgrade -y
+
+# Dist-upgrade installed packages
+apt-get dist-upgrade -y
+
+# Remove unused packages
+apt-get autoremove -y
+
+# Clean up the package cache
+apt-get clean
