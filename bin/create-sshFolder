@@ -1,0 +1,69 @@
+#!/bin/bash
+
+# Define default key length
+key_length="4096"
+
+# Define usage function to display help
+usage() {
+  echo "Usage: $0 [-b key_length] [-k] [-h|--help]"
+  echo ""
+  echo "  -b key_length  Specify the key length for the key pair. Default is 4096."
+  echo "  -k             Generate key pair in the .ssh folder. If not specified, only an empty .ssh folder will be created."
+  echo "  -h|--help      Show this help message."
+  echo ""
+}
+
+# Parse command line options
+while getopts "b:kh" opt; do
+  case $opt in
+    b)
+      key_length="$OPTARG"
+      ;;
+    k)
+      generate_key=true
+      ;;
+    h)
+      usage
+      exit 0
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+# Check if .env file exists
+if [ ! -f $HOME/server_config/.env ]; then
+  echo "ERROR: .env file does not exist in $HOME/server_config"
+  exit 1
+fi
+
+# Read the username from .env file
+username=$(grep USERNAME $HOME/server_config/.env | cut -d '=' -f2)
+
+# Check if username is not empty
+if [ -z "$username" ]; then
+  echo "ERROR: USERNAME variable is empty in .env file"
+  exit 1
+fi
+
+# Create .ssh folder for the user if it does not exist
+if [ ! -d /home/$username ]; then
+  echo "ERROR: /home/$username directory does not exist"
+  exit 1
+fi
+
+if [ ! -d /home/$username/.ssh ]; then
+  echo "Creating .ssh folder for user $username"
+  mkdir /home/$username/.ssh
+  chown $username:$username /home/$username/.ssh
+fi
+
+# Generate key pair if -k option is specified
+if [ "$generate_key" = true ]; then
+  echo "Generating key pair for user $username with length $key_length"
+  ssh-keygen -t rsa -b $key_length -N "" -f /home/$username/.ssh/id_rsa -q
+  chown $username:$username /home/$username/.ssh/id_rsa /home/$username/.ssh/id_rsa.pub
+fi
