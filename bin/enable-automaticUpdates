@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Update the package index
+sudo apt update
+
+# Install the unattended-upgrades package
+sudo apt install -y unattended-upgrades
+
+# Configure the automatic updates
+sudo cat > /etc/apt/apt.conf.d/50unattended-upgrades <<EOF
+Unattended-Upgrade::Allowed-Origins {
+        "${distro_id}:${distro_codename}";
+        "${distro_id}:${distro_codename}-security";
+        "${distro_id}:${distro_codename}-updates";
+};
+Unattended-Upgrade::Automatic-Reboot "false";
+EOF
+
+# Enable the automatic updates with the noninteractive configuration method
+sudo DEBIAN_FRONTEND=noninteractive dpkg-reconfigure -plow unattended-upgrades
+
+# Check the status of the unattended upgrades
+sudo unattended-upgrade --dry-run
+
+# Reset the terminal
+reset
