@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Define the new values for the parameters
+port=171
+address_family=inet
+permit_root_login=no
+password_authentication=no
+
+# Backup the original file
+cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
+
+# Replace the values in the file
+sed -i "s/#\?Port.*/Port $port/g" /etc/ssh/sshd_config
+sed -i "s/#\?AddressFamily.*/AddressFamily $address_family/g" /etc/ssh/sshd_config
+sed -i "s/#\?PermitRootLogin.*/PermitRootLogin $permit_root_login/g" /etc/ssh/sshd_config
+sed -i "s/#\?PasswordAuthentication.*/PasswordAuthentication $password_authentication/g" /etc/ssh/sshd_config
+
+# Restart the ssh service to apply changes
+systemctl restart ssh
