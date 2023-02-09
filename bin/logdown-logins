@@ -1,19 +1,33 @@
 #!/bin/bash
 
-# Define the new values for the parameters
-port=171
-address_family=inet
-permit_root_login=no
-password_authentication=no
+# Check if the .env file exists
+if [ ! -f $HOME/server_config/.env ]; then
+  echo "Error: The .env file does not exist."
+  exit 1
+fi
 
-# Backup the original file
-cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
+# Source the .env file
+source $HOME/server_config/.env
 
-# Replace the values in the file
-sed -i "s/#\?Port.*/Port $port/g" /etc/ssh/sshd_config
-sed -i "s/#\?AddressFamily.*/AddressFamily $address_family/g" /etc/ssh/sshd_config
-sed -i "s/#\?PermitRootLogin.*/PermitRootLogin $permit_root_login/g" /etc/ssh/sshd_config
-sed -i "s/#\?PasswordAuthentication.*/PasswordAuthentication $password_authentication/g" /etc/ssh/sshd_config
+# Assign the values from the .env file to variables
+port=$PORT
+address_family=$ADDRESS_FAMILY
+permit_root_login=$PERMIT_ROOT_LOGIN
+password_authentication=$PASSWORD_AUTHENTICATION
+
+# Check if any of the variables is empty
+if [ -z "$port" ] || [ -z "$address_family" ] || [ -z "$permit_root_login" ] || [ -z "$password_authentication" ]; then
+  echo "Error: One or more variables are empty."
+  exit 1
+fi
+
+# Modify the ssh config file
+sudo sed -i "s/^#\?Port.*/Port $port/g" /etc/ssh/sshd_config
+sudo sed -i "s/^#\?AddressFamily.*/AddressFamily $address_family/g" /etc/ssh/sshd_config
+sudo sed -i "s/^#\?PermitRootLogin.*/PermitRootLogin $permit_root_login/g" /etc/ssh/sshd_config
+sudo sed -i "s/^#\?PasswordAuthentication.*/PasswordAuthentication $password_authentication/g" /etc/ssh/sshd_config
 
 # Restart the ssh service to apply changes
-systemctl restart ssh
+sudo systemctl restart ssh
+
+echo "The ssh config has been updated successfully!"
